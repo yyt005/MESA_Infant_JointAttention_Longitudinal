@@ -10,7 +10,7 @@ https://doi.org/10.1111/desc.13457
 
 ⸻
 
-📝 Paper Summary
+Paper Summary
 
 This study examined the developmental trajectories of infant attention-following (AF) skills—including gaze-following, point-following, and gaze-plus-point-following—from 4 to 12 months of age, using a longitudinal experimental design.
 
@@ -33,7 +33,7 @@ cd infant-attention-following
 
 ⸻
 
-📄 Citation
+Citation
 
 If you use this code or data, please cite the original paper:
 
