@@ -1,7 +1,7 @@
 
 # MESA_Infant_JointAttention_Longitudinal
 
-This repository contains the data analysis code, figures, and relevant datasets for the paper:
+This repository contains the data analysis code and relevant datasets for the paper:
 
 Tang, Y., Gonzalez, M. R., & Deák, G. O. (2024).
 The slow emergence of gaze- and point-following: A longitudinal study of infants from 4 to 12 months.
@@ -23,9 +23,9 @@ Research Highlights:
 ⸻
 
 How to Use This Repository
-    1.    Clone the repository
-    3.    Open and run scripts from the code/ folder in RStudio
-    4.    Data used in the analyses is stored in the data/ folder. These are pre-processed, de-identified datasets.
+    - Clone the repository
+    - Open and run scripts from the code/ folder in RStudio
+    - Data used in the analyses is stored in the data/ folder. These are pre-processed, de-identified datasets.
 
 ⸻
 
@@ -39,9 +39,7 @@ Developmental Science, 27(3), e13457. https://doi.org/10.1111/desc.13457
 
 ⸻
 
-Contact
-
 For questions, please contact:
 Yueyan Tang – [yyt005@ucsd.edu]
 
-⸻
+
