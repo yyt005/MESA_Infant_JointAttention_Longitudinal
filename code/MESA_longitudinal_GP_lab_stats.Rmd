@@ -1,0 +1,585 @@
+---
+title: "MESA_longitudinal_GP_lab_stats"
+output: html_document
+---
+
+
+```{r}
+library(ggplot2)
+library(reshape2)
+library(GGally)
+library(dplyr)
+library("PerformanceAnalytics")
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
+library(afex)
+library(lme4)
+library(nlme)
+```
+
+```{r}
+###longitudinal GP main sample stringent data
+data <- read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/labdatacorrected/mesalab4-12r.csv", header=TRUE)
+```
+
+```{r}
+#orientation data
+oridata <- read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/mesa_lab_4-6orientationtrial.csv", header=TRUE)
+
+```
+
+```{r}
+#liberal data
+libdata <- read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/labdatacorrected/mesalab4-12libr.csv", header=TRUE)
+```
+
+```{r}
+head(oridata)
+```
+
+
+```{r}
+six = as.numeric(dfRefined$sixori)
+sd(six[complete.cases(six)])
+```
+
+```{r}
+### visualize distribution of 4, 5, 6 ori data
+#hist(oridata$fourori)
+fourori=oridata$fourori[!is.na(oridata$fourori)]
+fiveori=oridata$fiveori[!is.na(oridata$fiveori)]
+hist(fourori)
+median(fiveori)
+median(fourori)
+### for four month, we have a roughtly normal distribution, with similar mean and median, take 4 as cutoff
+### for month five, we have a left skewed distribution, with median at 5 and mean 4.9, take 5 as cutoff
+sum(fiveori>=5)
+length(fiveori)
+sum(fourori>=4)
+length(fourori)
+```
+
+```{r}
+###pair ori data with hit data
+prdfour = oridata[which(!is.na(oridata$fourori) & !is.na(oridata$fourhit)),]
+prdfive = oridata[which(!is.na(oridata$fiveori) & !is.na(oridata$fivehit)),]
+fourori1 = prdfour$fourori
+fiveori1 = prdfive$fiveori
+hist(fiveori1)
+length(fourori1) ##21 for four month
+sum(fourori1>=4)
+length(fiveori1) ##33 for five month
+sum(fiveori1>=5)
+### hit rates for four month, divide groups based on oridata
+group1four = prdfour[prdfour$fourori>=4,]$fourhit
+group2four = prdfour[prdfour$fourori<4,]$fourhit
+###hit rates for five month
+group1five = prdfive[prdfive$fiveori>=5,]$fivehit
+group2five = prdfive[prdfive$fiveori<5,]$fivehit
+```
+
+```{r}
+###test
+wilcox.test(group1four, group2four, alternative = "two.sided")
+wilcox.test(group1five, group2five, alternative = "two.sided")
+```
+
+
+```{r}
+#difference between 4&5 orientation data
+wilcox.test(oridata$fourori, oridata$fiveori, alternative = "two.sided")
+t.test(oridata$fourori, oridata$fiveori, alternative = "two.sided")
+```
+
+```{r}
+#4&5
+dfRefined=oridata[which(!is.na(oridata$fourori) & !is.na(oridata$fiveori)),]
+test=wilcox.test(dfRefined$fourori,dfRefined$fiveori,paired=TRUE)
+zscore = qnorm(test$p.value/2)
+zscore
+```
+
+```{r}
+##5&6
+dfRefined=oridata[which(!is.na(oridata$sixori) & !is.na(oridata$fiveori)),]
+test=wilcox.test(as.numeric(dfRefined$sixori),dfRefined$fiveori,paired=TRUE)
+zscore = qnorm(test$p.value/2)
+zscore
+test
+```
+
+
+```{r}
+#difference between 4&6 orientation data
+
+dfRefined=oridata[which(!is.na(oridata$fourori) & !is.na(oridata$sixori)),]
+test=wilcox.test(dfRefined$fourori,as.numeric(dfRefined$sixori),paired=TRUE)
+zscore = qnorm(test$p.value/2)
+zscore
+test
+```
+
+```{r}
+#predicting 4 month/correlation between ori data and hit rate
+new2=oridata[which(!is.na(oridata$fourori) & !is.na(oridata$fourhit)),]
+res2 <- cor.test(new$fourori, new$fourhit, 
+                    method = "pearson")
+res2
+```
+
+```{r}
+#predicting 5 month
+new=oridata[which(!is.na(oridata$fiveori) & !is.na(oridata$fivehit)),]
+res <- cor.test(new$fiveori, new$fivehit, 
+                    method = "pearson")
+res
+```
+
+```{r}
+#predicting 6 month
+new1=oridata[which(!is.na(oridata$sixori) & !is.na(oridata$sixhit)),]
+res1 <- cor.test(new1$sixori, new$sixhit, 
+                    method = "pearson")
+res1
+```
+
+```{r}
+### ----------orientation data over, continue with testing phase-----###
+```
+
+
+
+```{r}
+### check for main sample difference between 4&5
+datatemp = data[data$age==4 | data$age==5,]
+fourmonth = datatemp[datatemp$age==4,]
+fourmonth = fourmonth$wtAllpctStr
+fivemonth = datatemp[datatemp$age==5,]
+fivemonth = fivemonth$wtAllpctStr
+test = wilcox.test(fourmonth,fivemonth, alternative = "two.sided")
+zscore = qnorm(test$p.value/2)
+zscore
+```
+
+
+```{r}
+### check for main sample difference between 4&6
+datatemp = data[data$age==4 | data$age==6,]
+fourmonth = datatemp[datatemp$age==4,]
+fourmonth = fourmonth$wtAllpctStr
+sixmonth = datatemp[datatemp$age==6,]
+sixmonth = sixmonth$wtAllpctStr
+test = wilcox.test(fourmonth,sixmonth, alternative = "two.sided")
+test
+zscore = qnorm(test$p.value/2)
+zscore
+```
+
+```{r}
+### check for main sample difference between 5&6
+datatemp = data[data$age==5 | data$age==6,]
+
+sixmonth = datatemp[datatemp$age==6,]
+sixmonth = sixmonth$wtAllpctStr
+test = wilcox.test(fivemonth,sixmonth, alternative = "two.sided")
+test
+zscore = qnorm(test$p.value/2)
+zscore
+```
+
+```{r}
+t.test(fivemonth, fourmonth)
+```
+
+
+
+
+```{r}
+#check for sex differences
+###wilcoxon ranked sum test
+test = wilcox.test(data$wtAllpctStr~data$sex, alternative = "two.sided")
+test
+zscore = qnorm(test$p.value/2)
+zscore
+```
+
+
+```{r}
+hist(data$uwAllpctStr)
+```
+
+
+Effects of sex on AF performance (nonsignificant)
+```{r}
+#check for interaction between sex and cue type (weighted)
+#two way anova
+# Gather the columns unwtgaze, unwtpoint and unwtGP into long format.
+# Convert sex and age into factor variables
+data1 <- data %>%
+  gather(key = "cuetype", value = "hitrate", wtGzpctStr, wtPTpctStr, wtGPpctStr) %>%
+  convert_as_factor(sex,cuetype )
+# Inspect some random rows of the data by groups
+#set.seed(123)
+data1
+res.aov2 <- aov(hitrate ~ sex + cuetype+sex:cuetype, data = data1)
+summary(res.aov2)
+```
+
+
+
+Stringent vs Liberal criterion
+```{r}
+###linear mixed effect model on stringent data from 4 to 12 months; weighted
+#scaled.data <- scale(data) stringent data
+lmm <- lmer(scale(wtAllpctStr) ~ scale(age) + (1 | ID), data = data)
+summary(lmm)
+```
+
+```{r}
+###linear mixed effect model on liberal data from 4 to 12 months; unweighted
+#scaled.data <- scale(data) liberal data
+lmm1 <- lmer(scale(AllpctLib) ~ scale(age) + (1 | ID), data = libdata)
+summary(lmm1)
+```
+
+
+
+Effects of cue type
+```{r}
+#comparison between GP and pointing
+test=wilcox.test(data$wtGPpctStr, data$wtPTpctStr, paired = TRUE, alternative = "two.sided")
+test
+zscore=qnorm(test$p.value/2)
+zscore
+```
+
+```{r}
+#comparison between GP and gaze
+test=wilcox.test(data$wtGPpctStr, data$wtGzpctStr, paired = TRUE, alternative = "two.sided")
+test
+zscore=qnorm(test$p.value/2)
+zscore
+```
+
+```{r}
+#comparison between pointing and gaze
+wilcox.test(data$wtPTpctStr, data$wtGzpctStr, paired = TRUE, alternative = "two.sided")
+```
+
+Effects of cue location
+```{r}
+#comparison between front and back
+test=wilcox.test(data$wtFrpctStr, data$wtBackpctStr, paired = TRUE, alternative = "two.sided")
+zscore=qnorm(test$p.value/2)
+zscore
+test
+```
+
+```{r}
+#comparison between front and side
+test=wilcox.test(data$wtFrpctStr, data$wtSidepctStr, paired = TRUE, alternative = "two.sided")
+zscore=qnorm(test$p.value/2)
+zscore
+test
+```
+
+```{r}
+#comparison between side and back
+wilcox.test(data$wtSidepctStr, data$wtBackpctStr, paired = TRUE, alternative = "two.sided")
+```
+
+Cue type developmental trajectory
+```{r}
+#overall developmental trajectory for gp
+lm(uwGPpctStr ~ age, data=data)
+
+```
+
+```{r}
+#overall developmental trajectory for gaze
+lm(uwGzpctStr ~ age, data=data)
+```
+
+```{r}
+#individual developmental trajectory for GP
+devGP = coef(lmList(wtGPpctStr~age | ID, data=data))$age
+#individual developmental trajectory for POINT
+devPT = coef(lmList(wtPTpctStr ~age| ID, data=data))$age
+#individual developmental trajectory for GAZE
+devGz = coef(lmList(wtGzpctStr~age | ID, data=data))$age
+```
+
+```{r}
+devcue = data.frame(devGP, devPT, devGz)
+devcue <- devcue %>%
+  gather(key = "cuetype", value = "hitrate", devGP, devPT, devGz) %>%
+  convert_as_factor(cuetype )
+```
+
+```{r}
+res.aov <- aov(hitrate ~ cuetype, data = devcue)
+summary(res.aov)
+```
+
+```{r}
+###developmental trajetory comparison between gaze and pointing 
+t.test(devGz, devPT)
+```
+
+
+```{r}
+###developmental trajetory comparison between GP and pointing 
+t.test(devGP, devPT)
+```
+
+```{r}
+###developmental trajetory comparison between GP and gaze 
+t.test(devGP, devGz)
+```
+
+```{r}
+hist(devGP)
+```
+
+
+
+Developmental trajectory of different target locations AF
+```{r}
+#individual developmental trajectory for fr
+devfr = coef(lmList(wtFrpctStr~age | ID, data=data))$age
+#individual developmental trajectory for side
+devsd = coef(lmList(wtSidepctStr ~age| ID, data=data))$age
+#individual developmental trajectory for bk
+devbk = coef(lmList(wtBackpctStr~age | ID, data=data))$age
+```
+
+
+```{r}
+###developmental trajetory comparison between front and side
+t.test(devfr, devsd)
+
+
+###developmental trajetory comparison between front and back 
+t.test(devfr, devbk)
+
+
+###developmental trajetory comparison between side and back 
+t.test(devsd, devbk)
+```
+
+
+```{r}
+devloc = data.frame(devfr, devsd, devbk)
+devloc <- devloc %>%
+  gather(key = "cueloc", value = "hitrate", devfr, devsd, devbk) %>%
+  convert_as_factor(cueloc )
+devloc
+```
+
+```{r}
+res.aov <- aov(hitrate ~ cueloc, data = devloc)
+summary(res.aov)
+```
+
+```{r}
+hist(devGz)
+```
+
+
+Comparison between strigent and liberal criterion
+```{r}
+###correlation between strigent and liberal hits by month
+corstrlib = data <- read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/labdatacorrected/mesa_lab_GP_strlib.csv", header=TRUE)
+
+```
+
+
+```{r}
+library(dplyr)
+corstrlib %>%
+  group_by(age) %>%
+  summarize(COR=cor(AllpctLib,Allpctstr))
+```
+
+
+Correlation between trial number and AF (data retention)
+```{r}
+###correlation between trial number and hit (weighted stringent overall)
+cortrialhit = data <- read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/labdatacorrected/mesalab_trial_3moave.csv", header=TRUE)
+firstthree = cortrialhit[cortrialhit$age==4,]
+cor.test(firstthree$avetrial, firstthree$avehit)
+```
+
+```{r}
+secondthree = cortrialhit[cortrialhit$age==7,]
+cor.test(secondthree$avetrial, secondthree$avehit)
+```
+
+```{r}
+lastthree = cortrialhit[cortrialhit$age==10,]
+cor.test(lastthree$avetrial, lastthree$avehit)
+```
+
+
+```{r}
+###correlation between session number and hit
+session = data <- read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/labdatacorrected/mesalab_sessiondata.csv", header=TRUE)
+
+library(dplyr)
+session %>%
+  group_by(age) %>%
+  summarize(COR=cor(Allpctstr,missing))
+```
+
+```{r}
+cor.test(session$Allpctstr, session$missing)
+```
+
+```{r}
+###correlation between liberal and strigent
+strlib = read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/labdatacorrected/mesa_lab_GP_strlib.csv", header=TRUE)
+strlib = strlib[strlib$location != "all",]
+strlib
+```
+
+```{r}
+library(dplyr)
+
+#calculate mean hit increase grouped by age, criterion, and location
+strlib %>%
+  group_by(age, criterion, location) %>%
+  summarize(mean_hit = mean(hitpct))
+```
+
+```{r}
+strlib$age <- as.factor(strlib$age)
+strlib$location <- as.factor(strlib$location)
+strlib$criterion <- as.factor(strlib$criterion)
+```
+
+
+```{r}
+#perform three-way ANOVA
+model <- aov(hitpct ~ age * criterion * location, data=strlib)
+
+#view summary of three-way ANOVA
+summary(model)
+
+```
+
+```{r}
+library(dplyr)
+
+#find mean jumping increase by program
+strlib %>%
+  group_by(criterion) %>%
+  summarize(mean_hit = mean(hitpct))
+
+
+```
+
+```{r}
+bxp <- ggboxplot(
+  strlib, x = "age", y = "hitpct", 
+  color = "location", facet.by = "criterion"
+  )
+bxp
+```
+
+practice effects: main sample and comparison sample
+```{r}
+datanew <- read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/labdatacorrected/mainsample_cs3_9&12.csv", header=TRUE)
+```
+
+```{r}
+###month 9 data; comparison between cs and ms
+datanewcs9 = datanewcs[datanewcs$age==9,]$hit
+datanewms9 = datanewms[datanewms$age==9,]$hit
+test = wilcox.test(datanewms9, datanewcs9)
+zscore=qnorm(test$p.value/2)
+zscore
+test
+```
+
+```{r}
+###month 12 data; comparison between cs and ms
+datanewcs12 = datanewcs[datanewcs$age==12,]$hit
+datanewms12 = datanewms[datanewms$age==12,]$hit
+test = wilcox.test(datanewms12, datanewcs12)
+zscore=qnorm(test$p.value/2)
+zscore
+test
+```
+
+```{r}
+#perform ANOVA
+model <- aov(hit ~ age * factor(group), data=datanew)
+summary(model)
+```
+
+
+```{r}
+datanewcs = datanew[datanew$group=='cs',]
+#cs3 growth curve 9-12
+lmm2 <- lmer(scale(hit) ~ scale(age) + (1 |id ), data = datanewcs)
+summary(lmm2)
+```
+
+```{r}
+datanewms = datanew[datanew$group=='ms',]
+#main sample growth curve 9-12
+lmm3 <- lmer(scale(hit) ~ scale(age) + (1 |id ), data = datanewms)
+summary(lmm3)
+```
+
+```{r}
+datanew1 <- read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/labdatacorrected/mainsample_cs3_growth.csv", header=TRUE)
+```
+
+```{r}
+#main sample 4-12
+datanewmstotal = datanew1[datanew1$group=='ms',]
+#cs3 growth curve 9-12
+lmm3 <- lmer(scale(hit) ~ scale(age) + (1 |id ), data = datanewmstotal)
+summary(lmm3)
+```
+
+```{r}
+#main sample 4-9
+
+databewmsnine = datanewmstotal[datanewmstotal$age==4 |datanewmstotal$age==9 ,]
+#cs3 growth curve 9-12
+lmm2 <- lmer(scale(hit) ~ scale(age) + (1 |id ), data = datanewmsnine)
+summary(lmm2)
+```
+
+```{r}
+#cs sample 4-9
+#databewcsnine= datanew1[datanew1$group=='cs',]
+datanewcsnine = datanew1[(datanew1$age==4 &datanew1$group=='ms')|(datanew1$age==9 &datanew1$group=='cs') ,]
+datanewcsnine
+lmm4 <- lmer(scale(hit) ~ scale(age), data = datanewcsnine)
+summary(lmm4)
+```
+
+```{r}
+#cs sample 4-9-12
+#databewcsnine= datanew1[datanew1$group=='cs',]
+datanewcsnine1 = datanew1[(datanew1$age==4 &datanew1$group=='ms')|(datanew1$age==9 &datanew1$group=='cs')|(datanew1$age==12 &datanew1$group=='cs') ,]
+#cs3 growth curve 9-12
+lmm5 <- lmer(scale(hit) ~ scale(age) + (1 |id ), data = datanewcsnine1)
+summary(lmm5)
+```
+
+```{r}
+ggplot() +
+  geom_smooth(aes(x = age, y = hit), data = datanewcsnine1, 
+              method = "lm", se = FALSE, color = "#D16103") + 
+  geom_smooth(aes(x = age, y = hit), data = datanewmstotal, 
+              method = "lm", se = FALSE, color = "#4E84C4") + 
+  geom_point(aes(x = age, y = hit), data = datanewcsnine1, color = "#D16103") + 
+  geom_point(aes(x = age, y = hit), data = datanewmstotal, color = "#4E84C4")+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"),text = element_text(size=20))
+
+```

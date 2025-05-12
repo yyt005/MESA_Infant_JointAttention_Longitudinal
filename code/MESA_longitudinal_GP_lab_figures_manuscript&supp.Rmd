@@ -1,0 +1,414 @@
+---
+title: "MESA_longitudinal_GP_lab_figures_manuscript&supp"
+output: html_document
+---
+
+
+```{r}
+library(ggplot2)
+library(reshape2)
+library(GGally)
+library(dplyr)
+library("PerformanceAnalytics")
+```
+
+```{r}
+data <- read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/labdatacorrected/mesalab4-12r.csv", header=TRUE)
+```
+
+Figure 2: 
+Box Plots: Total Proportions of Hits By Month
+```{r}
+##longitudinal boxlots from 4 to 12 months
+ggplot(data,aes(x=age, 
+                y=uwAllpctStr, 
+                group=age))+
+  geom_boxplot()+
+  geom_point(alpha=0.3)+
+  labs(x='Age (months)', 
+       y='Proportion Correct')+
+  ylim(0,1)+
+  geom_smooth(color='black')+
+  theme_bw()+
+  theme(
+    panel.border = element_blank(), 
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(), 
+    axis.line = element_line(colour = "black")
+    )+
+  scale_x_continuous(breaks= c(4,6,8,10,12))+
+  theme(text = element_text(size = 18))+
+  coord_cartesian(ylim = c(0, 1))+
+  geom_smooth(method = "lm", 
+              se=TRUE, 
+              aes(group=1), 
+              show.legend = T)+
+  #geom_jitter(alpha=0.4)+
+  stat_sum(alpha=0.4)
+```
+
+
+Figure 3: Scatterplots: Hit Proportions By Month By Cue Type (Gaze, Point, Gaze+Point)
+```{r}
+#reshape for cue type
+melted = melt(data, id.vars = c("ID", "age"),
+                measure.vars = c("wtGzpctStr", "wtPTpctStr", "wtGPpctStr"))
+```
+
+
+```{r}
+##longitudinal cue type
+labels <- list(
+  'Gaze', "Point", "Gaze + Point")
+cuetype_labeller <- function(variable,value){
+  return(labels[value])
+}
+ggplot(melted, aes(x=age, 
+                   y=value, 
+                   group=variable)) +
+  geom_point(aes(x=age, 
+                 y=value))+
+  coord_cartesian(ylim = c(0, 1))+
+  theme_bw()+
+  theme(panel.grid.major =element_blank(),
+        panel.grid.minor = element_blank())+
+  theme(plot.title = element_text(hjust = 0.5))+
+  ylab("Proportion Correct")+
+  xlab("Age (Months)")+
+  scale_x_continuous(breaks=seq(4, 12, 2))+
+  theme(text = element_text(size = 17),
+        axis.text.x =element_text(size=17))+
+  theme(axis.ticks.x=element_blank())+
+  facet_wrap(~variable, 
+             labeller=cuetype_labeller)+
+  geom_smooth(method = "lm", 
+              se=TRUE,
+              show.legend = T)+
+  geom_jitter(alpha=0.4)+
+  stat_sum(alpha=0.4)
+```
+
+
+Figure 4: Scatterplots of Hit Proportions By Month By Target Location (Front, Side, Back)
+```{r}
+#reshape for cue location
+melted1 = melt(data, id.vars = c("ID", "age"),
+                measure.vars = c("wtFrpctStr", "wtSidepctStr", "wtBackpctStr"))
+```
+
+```{r}
+##longitudinal cue location
+labels <- list(
+  'Front', "Side", "Back")
+cuetype_labeller <- function(variable,value){
+  return(labels[value])
+}
+ggplot(melted1, aes(x=age, 
+                    y=value, 
+                    group=variable)) +
+  geom_point(aes(x=age, 
+                 y=value))+
+  coord_cartesian(ylim = c(0, 1))+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())+
+  theme(plot.title = element_text(hjust = 0.5))+
+  ylab("Proportion Correct")+
+  xlab("Age (Months)")+
+  scale_x_continuous(breaks=seq(4, 12, 2))+
+  theme(text = element_text(size = 17),
+        axis.text.x = element_text(size=17))+
+  theme(axis.ticks.x=element_blank())+
+  facet_wrap(~variable, 
+             labeller=cuetype_labeller)+
+  geom_smooth(method = "lm", 
+              se=TRUE,  
+              show.legend = T)+
+  geom_jitter(alpha = 0.4) +
+  stat_sum(alpha=0.4)
+```
+
+Figure 5: Boxplots Of Hit Proportions By Main and Comparison Groups At 9 and 12 Months
+```{r}
+data1 <- read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/labdatacorrected/mainsample_cs3_9&12.csv", header=TRUE)
+```
+
+```{r}
+bxp <- ggboxplot(
+  data1, x = "age", y = "hit",
+  color = "group", palette = "jco"
+  )
+bxp
+```
+
+
+Figure 6: Correlations Of Hit Proportions From 7 To 12 Months
+```{r}
+###correlation among main sample
+melted2 = melt(data, id.vars = c("ID", "age"),
+                measure.vars = c("wtAllpctStr"))
+melted2 = melted2[, c(1,2,4)]
+head(melted2)
+```
+
+```{r}
+bymonth= reshape(melted2, idvar = "ID", timevar = "age", direction = "wide")
+bymonth= bymonth[, -1]
+colnames(bymonth) = c( 'Mon4', 'Mon5',"Mon6", 'Mon7', 'Mon8', 'Mon9', 'Mon10', 'Mon11', 'Mon12' )
+```
+
+
+```{r}
+my_fn <- function(data, mapping, ...){
+    p <- ggplot(data = bymonth, mapping = mapping) + 
+      geom_point() + 
+      geom_smooth(method=lm, fill="blue", color="blue", ...)
+  p
+}
+
+cor_func <- function(data, mapping, method, ...){
+  x <- eval_data_col(data, mapping$x)
+  y <- eval_data_col(data, mapping$y)
+  
+  corr <- cor(x, y, method=method, use='complete.obs')
+  
+  if(stars){
+  stars <- c("***", "**", "*", "")[findInterval(corr$p.value, c(0, 0.001, 0.01, 0.05, 1))]
+  lbl <- paste0(round(est, ndp), stars)
+}else{
+  lbl <- round(est, ndp)
+}
+
+  
+  ggally_text(
+    label = as.character(round(corr, 2)), 
+    mapping = aes(),
+    xP = 0.25, yP = 0.25,
+    color = 'black',
+    ...
+  )
+} 
+
+cor_fun <- function(data, mapping, method="pearson", use="pairwise", ndp=2, sz=9, stars=TRUE, ...){
+
+# grab data
+x <- eval_data_col(data, mapping$x)
+y <- eval_data_col(data, mapping$y)
+
+# calculate correlation: for significance stars
+corr <- cor.test(x, y, method=method)
+est <- corr$estimate
+lb.size <- 4
+
+# get significance stars
+if(stars){
+  stars <- c("***", "**", "*", "")[findInterval(corr$p.value, c(0, 0.001, 0.01, 0.05, 1))]
+  lbl <- paste0(round(est, ndp), stars)
+}else{
+  lbl <- round(est, ndp)
+}
+
+# calculate correlation: for colored tiles
+corr <- cor(x, y, method=method, use=use)
+
+# calculate color based on correlation value
+# corr = -1 => blue, 
+# corr =  0 => white, 
+# corr = +1 => red, 
+colFn <- colorRampPalette(c("blue", "white", "red"), interpolate ='spline')
+fill <- colFn(100)[findInterval(corr, seq(-1, 1, length=100))]
+
+ggplot(data = data, mapping = mapping, ...) + 
+  theme_void() +
+  annotate("text",
+           x=mean(x, na.rm=TRUE),
+           y=mean(y, na.rm=TRUE),
+           label=lbl,
+           size=lb.size,
+           ...) 
+  
+}
+###plot correlations for month 7- 12
+#g = ggpairs(bymonth, 
+#            columns=4:9, 
+#            lower = list(continuous = my_fn),
+#            upper=list(continuous=cor_fun))+
+#  theme(text= element_text(size = 15))
+
+b = ggpairs(bymonth, 
+            lower = list(continuous = my_fn),
+            upper=list(continuous=cor_fun,
+                       continuous = wrap("cor", size=20) ),
+            columns=4:9)+
+  theme(text = element_text(size=13))+
+  scale_x_continuous(guide = guide_axis(check.overlap = TRUE))+
+  scale_y_continuous(guide = guide_axis(check.overlap = TRUE))
+b
+```
+
+
+----------------------------Supplemental figures---------------------------------
+
+Figure S1: Boxplots of Liberal and Stringent Hits, By Infant Age and Target Location
+
+```{r}
+###correlation between liberal and strigent
+strlib = read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/labdatacorrected/mesa_lab_GP_strlib.csv", header=TRUE)
+strlib = strlib[strlib$location != "all",]
+strlib
+```
+
+```{r}
+libdata <- read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/labdatacorrected/mesalab4-12libr.csv", header=TRUE)
+```
+
+
+```{r}
+bxp <- ggboxplot(
+  strlib, x = "age", y = "hitpct", 
+  color = "location", facet.by = "criterion"
+  )
+bxp
+```
+
+
+
+
+Figure S3: Correlations Between AF at 9-10 and 11-12 Months, And Language Development Indices
+```{r}
+###9-12month and language scores (unweighted)
+data4 <- read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/9-12lablanguage.csv", header=TRUE)
+data4 <- na.omit(data4)
+langwt <-data4[, c(7, 15, 16, 17, 18, 19, 20, 21)]
+languw <-data4[, c(14, 15, 16, 17, 18, 19, 20, 21)]
+langsupp <- data4[, c(5, 6,  15, 16, 17, 18, 19, 20, 21)]
+head(langsupp)
+```
+
+
+```{r}
+##correlation table for language scores (supplemental)
+b <- ggpairs(langsupp, showStrips = 'TRUE',diag = list(continuous = "densityDiag"))
+
+#b[1,1] = b[1,1] + scale_y_continuous(limits = c(0,10))
+cor_func <- function(data, mapping, method, ...){
+  x <- eval_data_col(data, mapping$x)
+  y <- eval_data_col(data, mapping$y)
+  
+  corr <- cor(x, y, method=method, use='complete.obs')
+  
+  if(stars){
+  stars <- c("***", "**", "*", "")[findInterval(corr$p.value, c(0, 0.001, 0.01, 0.05, 1))]
+  lbl <- paste0(round(est, ndp), stars)
+}else{
+  lbl <- round(est, ndp)
+}
+
+  
+  ggally_text(
+    label = as.character(round(corr, 2)), 
+    mapping = aes(),
+    xP = 0.25, yP = 0.25,
+    color = 'black',
+    ...
+  )
+ 
+}
+
+cor_fun <- function(data, mapping, method="pearson", use="pairwise", ndp=2, sz=5, stars=TRUE, ...){
+
+# grab data
+x <- eval_data_col(data, mapping$x)
+y <- eval_data_col(data, mapping$y)
+
+# calculate correlation: for significance stars
+corr <- cor.test(x, y, method=method)
+est <- corr$estimate
+lb.size <- 4
+
+# get significance stars
+if(stars){
+  stars <- c("***", "**", "*", "")[findInterval(corr$p.value, c(0, 0.001, 0.01, 0.05, 1))]
+  lbl <- paste0(round(est, ndp), stars)
+}else{
+  lbl <- round(est, ndp)
+}
+
+# calculate correlation: for colored tiles
+corr <- cor(x, y, method=method, use=use)
+
+# calculate color based on correlation value
+# corr = -1 => blue, 
+# corr =  0 => white, 
+# corr = +1 => red, 
+colFn <- colorRampPalette(c("blue", "white", "red"), interpolate ='spline')
+fill <- colFn(100)[findInterval(corr, seq(-1, 1, length=100))]
+
+ggplot(data = data, mapping = mapping, ...) + 
+  theme_void() +
+  annotate("text",
+           x=mean(x, na.rm=TRUE),
+           y=mean(y, na.rm=TRUE),
+           label=lbl,
+           size=lb.size,
+           ...) 
+  
+}
+
+my_fn <- function(data, mapping, ...){
+  p <- ggplot(data = data, mapping = mapping) + 
+    geom_point() + 
+    
+    geom_smooth(method=lm, fill="blue", color="blue", ...)
+  p
+}
+
+
+b = ggpairs(langsupp, 
+        upper=list(continuous=cor_fun, 
+                   continuous = wrap("cor", size=20)),
+        lower = list(continuous = my_fn), 
+        columnLabels = c("Ave 9-10", "Ave 11-12", "EC12", "RC12", "Comp12","EC18", "RC18", "Comp18", "MCDI22Ave" ))+
+  theme(text = element_text(size=12)) +
+  scale_x_continuous(guide = guide_axis(check.overlap = TRUE))+
+  scale_y_continuous(guide = guide_axis(check.overlap = TRUE))
+
+b
+```
+
+
+
+Figure S4: correlation among main sample from 4 to 12 months
+```{r}
+
+###plot correlations for month 4- 12
+#g = ggpairs(bymonth, lower = list(continuous = my_fn),upper=list(continuous=cor_fun))+theme(text= #element_text(size = 15))
+#g
+
+b = ggpairs(bymonth, 
+            lower = list(continuous = my_fn),
+            upper=list(continuous=cor_fun,
+                       continuous = wrap("cor", size=20) ))+
+  theme(text = element_text(size=15))+
+  scale_x_continuous(guide = guide_axis(check.overlap = TRUE))+
+  scale_y_continuous(guide = guide_axis(check.overlap = TRUE))
+b
+```
+
+Figure S5: Linear Slopes From 4 To 9 To 12 Months For The Main And Comparison Groups
+
+```{r}
+datanew1 <- read.csv("~/0_PhD/1st_year/3_rawdata/MESA data/labdatacorrected/mainsample_cs3_growth.csv", header=TRUE)
+```
+
+```{r}
+ggplot() +
+  geom_smooth(aes(x = age, y = hit), data = datanewcsnine1, 
+              method = "lm", se = FALSE, color = "#D16103") + 
+  geom_smooth(aes(x = age, y = hit), data = datanewmstotal, 
+              method = "lm", se = FALSE, color = "#4E84C4") + 
+  geom_point(aes(x = age, y = hit), data = datanewcsnine1, color = "#D16103") + 
+  geom_point(aes(x = age, y = hit), data = datanewmstotal, color = "#4E84C4")+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = "black"),text = element_text(size=20))
+
+```
