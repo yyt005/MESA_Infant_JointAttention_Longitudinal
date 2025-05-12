@@ -27,7 +27,7 @@ This study examined the developmental trajectories of infant attention-following
 
 - **Clone the repository:**
   ```bash
-  git clone https://github.com/your-username/MESA_Infant_JointAttention_Longitudinal.git
+  git clone [https://github.com/your-username/MESA_Infant_JointAttention_Longitudinal.git](https://github.com/yyt005/MESA_Infant_JointAttention_Longitudinal.git)
   cd MESA_Infant_JointAttention_Longitudinal
   
 For questions, please contact:
