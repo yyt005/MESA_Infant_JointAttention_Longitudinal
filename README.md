@@ -10,19 +10,20 @@ This repository contains the data analysis code and relevant datasets for the pa
 
 ---
 
-## 📝 Paper Summary
+## Paper Summary
 
 This study examined the developmental trajectories of infant attention-following (AF) skills—including **gaze-following, point-following, and gaze-plus-point-following**—from 4 to 12 months of age, using a longitudinal experimental design.
 
 ## Research Highlights
 
-- Longitudinal tracking of infant AF skills over multiple months.
-- Controlled paradigm accounting for motivation, attention, and visual search factors.
-- Healthy infants reliably followed gaze and points only after 6 months, with slow, incremental gains through 12 months.
-- Modest individual stability in AF skills emerged between 8–12 months.
+- A longitudinal experimental study documented the emergence and developmental trajectories of North American middle-class infants' visual attention-following skills, including gaze-following, point-following, and gaze-and-point-following.
+- An innovative paradigm controlled for factors including motivation, attentiveness, and visual-search baserates. Motor development was ruled out as a predictor or limiter of the emergence of attention-following.
+- Infants did not follow attention reliably until after 6 months, and AF skills increased slowly from 7 to 12 months.
+- Infants' individual trajectories showed modest month-to-month stability from 8 to 12 months of age.
 
 
-## 🚀 How to Use This Repository
+
+## How to Use This Repository
 
 - **Clone the repository:**
   ```bash
