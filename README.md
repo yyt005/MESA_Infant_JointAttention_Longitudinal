@@ -23,13 +23,9 @@ Research Highlights:
 ⸻
 
 How to Use This Repository
-    1.    Clone the repository:
-
-git clone https://github.com/yyt005/MESA_JointAttention_longitudinal.git
-cd infant-attention-following
-
-    2.    Open and run scripts from the code/ folder in RStudio
-    3.    Data used in the analyses is stored in the data/ folder. These are pre-processed, de-identified datasets.
+    1.    Clone the repository
+    3.    Open and run scripts from the code/ folder in RStudio
+    4.    Data used in the analyses is stored in the data/ folder. These are pre-processed, de-identified datasets.
 
 ⸻
 
